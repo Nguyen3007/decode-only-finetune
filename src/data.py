@@ -20,26 +20,29 @@ def load_viquad(data_path: str) -> DatasetDict:
 # ANSWER EXTRACTION
 # =======================
 def extract_answer(example: Dict[str, Any]) -> str:
-    """
-    Lấy câu trả lời từ:
-    - answers["text"]
-    - plausible_answers["text"]
+    # --- FIX LỖI NONETYPE ---
+    # Lấy object ra, nếu nó là None thì gán bằng dict rỗng {}
+    answers_obj = example.get("answers")
+    if answers_obj is None:
+        answers_obj = {}
 
-    Nếu không có → trả về câu từ chối chuẩn, tránh model học im lặng.
-    """
+    plausible_obj = example.get("plausible_answers")
+    if plausible_obj is None:
+        plausible_obj = {}
 
-    answers = example.get("answers", {}).get("text", [])
-    plausible = example.get("plausible_answers", {}).get("text", [])
+    # Giờ thì an toàn để .get("text")
+    answers = answers_obj.get("text", [])
+    plausible = plausible_obj.get("text", [])
 
-    # 1. Trả lời thật
-    if answers and len(answers) > 0 and answers[0].strip():
+    # 1. Ưu tiên câu trả lời chính xác
+    if answers and len(answers) > 0 and answers[0]:
         return answers[0]
 
-    # 2. Trả lời khả dĩ (nên ưu tiên hơn trả lời rỗng)
-    if plausible and len(plausible) > 0 and plausible[0].strip():
+    # 2. Nếu không, lấy câu trả lời khả dĩ
+    if plausible and len(plausible) > 0 and plausible[0]:
         return plausible[0]
 
-    # 3. Trả lời không tìm thấy — tránh ""
+    # 3. Trả lời mặc định
     return "Thông tin này không có trong đoạn văn được cung cấp."
 
 
