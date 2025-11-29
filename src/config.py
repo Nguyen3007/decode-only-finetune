@@ -10,12 +10,12 @@ class TrainConfig:
     model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
     data_path: str = "./data/viquad_raw"
     output_dir: str = "./checkpoints/qwen_viquad_final"
-    max_seq_length: int = 2048   # nếu vẫn OOM nữa thì hạ xuống 1536 hoặc 1024
+    max_seq_length: int = 1536   # nếu vẫn OOM nữa thì hạ xuống 1536 hoặc 1024
 
     # ====== BATCH SIZE AN TOÀN CHO 32GB ======
     per_device_train_batch_size: int = 8      # ↓ từ 16/24 xuống 8
     per_device_eval_batch_size: int = 8
-    gradient_accumulation_steps: int = 4      # Effective batch = 8*4 = 32
+    gradient_accumulation_steps: int = 2      # Effective batch = 8*4 = 32
 
     num_train_epochs: int = 3
     learning_rate: float = 2e-4
