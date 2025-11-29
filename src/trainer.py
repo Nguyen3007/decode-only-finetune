@@ -78,7 +78,8 @@ def train():
         torch_dtype=torch.bfloat16 if cfg.bf16 else torch.float16,
         device_map="auto"
     )
-
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f" Total parameters: {total_params:,}")
     # Tối ưu hóa Model Config
     model.config.dropout = 0.0
     model.config.attention_dropout = 0.0
@@ -134,13 +135,12 @@ def train():
         per_device_train_batch_size=cfg.per_device_train_batch_size,
         per_device_eval_batch_size=cfg.per_device_eval_batch_size,
         gradient_accumulation_steps=cfg.gradient_accumulation_steps,
-
         learning_rate=cfg.learning_rate,
         weight_decay=cfg.weight_decay,
         warmup_ratio=cfg.warmup_ratio,
-
         logging_steps=cfg.logging_steps,
-        eval_strategy=cfg.evaluation_strategy,
+
+        evaluation_strategy=cfg.evaluation_strategy,
         eval_steps=cfg.eval_steps,
         save_strategy=cfg.save_strategy,
         save_steps=cfg.save_steps,
@@ -150,11 +150,11 @@ def train():
         bf16=cfg.bf16,
         gradient_checkpointing=cfg.gradient_checkpointing,
 
-        # ⭐ CÁC TỐI ƯU QUAN TRỌNG ⭐
-        dataloader_num_workers=2,  # Dùng 4 nhân CPU nạp data
-        dataloader_pin_memory=True,  # Tăng tốc bắn data vào VRAM
-        tf32=True,  # Bật TensorFloat-32 cho Ampere (RTX 30xx)
-        optim="adamw_torch",  # Optimizer nhanh, nhẹ
+        # 🔥 BOOST cho RTX 5090
+        optim="adamw_torch_fused",
+        tf32=True,
+        dataloader_num_workers=8,
+        dataloader_pin_memory=True,
 
         report_to="none",
         remove_unused_columns=False
