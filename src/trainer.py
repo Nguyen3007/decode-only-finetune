@@ -1,3 +1,5 @@
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import torch
 import json
 import os
@@ -149,7 +151,7 @@ def train():
         gradient_checkpointing=cfg.gradient_checkpointing,
 
         # ⭐ CÁC TỐI ƯU QUAN TRỌNG ⭐
-        dataloader_num_workers=4,  # Dùng 4 nhân CPU nạp data
+        dataloader_num_workers=2,  # Dùng 4 nhân CPU nạp data
         dataloader_pin_memory=True,  # Tăng tốc bắn data vào VRAM
         tf32=True,  # Bật TensorFloat-32 cho Ampere (RTX 30xx)
         optim="adamw_torch",  # Optimizer nhanh, nhẹ

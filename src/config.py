@@ -8,12 +8,12 @@ class TrainConfig:
     model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
     data_path: str = "./data/viquad_raw"
     output_dir: str = "./checkpoints/qwen_viquad_final"
-    max_seq_length: int = 2048
+    max_seq_length: int = 1024
 
     # ====== TRAINING HYPERPARAMS (RTX 3090 OPTIMIZED) ======
     num_train_epochs: int = 3
 
-    per_device_train_batch_size: int = 3
+    per_device_train_batch_size: int = 8
     per_device_eval_batch_size: int = 3
 
     gradient_accumulation_steps: int = 4
@@ -46,6 +46,6 @@ class TrainConfig:
 
     #  TẮT CHECKPOINTING ĐỂ MAX TỐC ĐỘ (Vì Batch 3 đủ nhỏ để không OOM)
     # Nếu vẫn bị OOM, hãy sửa thành True
-    gradient_checkpointing: bool = True
+    gradient_checkpointing: bool = False
 
     seed: int = 42
