@@ -1,0 +1,110 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "uit-vi_qu_ad2.0",
+  "dataset_size": 51477709,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/taidng/UIT-ViQuAD2.0@406f09a45cc106a8f7b7fd0c25078883fe58cb1f/data/train-00000-of-00001.parquet": {
+      "num_bytes": 5200852,
+      "checksum": null
+    },
+    "hf://datasets/taidng/UIT-ViQuAD2.0@406f09a45cc106a8f7b7fd0c25078883fe58cb1f/data/validation-00000-of-00001.parquet": {
+      "num_bytes": 734914,
+      "checksum": null
+    },
+    "hf://datasets/taidng/UIT-ViQuAD2.0@406f09a45cc106a8f7b7fd0c25078883fe58cb1f/data/test-00000-of-00001.parquet": {
+      "num_bytes": 1163726,
+      "checksum": null
+    }
+  },
+  "download_size": 7099492,
+  "features": {
+    "id": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "uit_id": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "title": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "context": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "question": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "answers": {
+      "text": {
+        "feature": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "_type": "List"
+      },
+      "answer_start": {
+        "feature": {
+          "dtype": "int32",
+          "_type": "Value"
+        },
+        "_type": "List"
+      }
+    },
+    "is_impossible": {
+      "dtype": "bool",
+      "_type": "Value"
+    },
+    "plausible_answers": {
+      "text": {
+        "feature": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "_type": "List"
+      },
+      "answer_start": {
+        "feature": {
+          "dtype": "int32",
+          "_type": "Value"
+        },
+        "_type": "List"
+      }
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 58577201,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 37564931,
+      "num_examples": 28454,
+      "dataset_name": "uit-vi_qu_ad2.0"
+    },
+    "validation": {
+      "name": "validation",
+      "num_bytes": 4938746,
+      "num_examples": 3814,
+      "dataset_name": "uit-vi_qu_ad2.0"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 8974032,
+      "num_examples": 7301,
+      "dataset_name": "uit-vi_qu_ad2.0"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

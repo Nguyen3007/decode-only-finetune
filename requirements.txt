@@ -1,0 +1,20 @@
+# --- Core Libraries ---
+transformers>=4.40.0
+datasets>=2.19.0
+accelerate>=0.29.0
+peft>=0.10.0
+
+# --- Quantization (Bắt buộc cho Linux/VastAI) ---
+bitsandbytes>=0.43.0
+scipy
+
+# --- Evaluation Metrics ---
+evaluate
+sacrebleu
+rouge_score
+absl-py
+nltk
+
+# --- Optimization (Optional but Recommended) ---
+# Flash Attention 2 giúp train nhanh hơn trên GPU A100/A6000/3090/4090
+flash-attn>=2.5.0 --no-build-isolatio
