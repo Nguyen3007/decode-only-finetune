@@ -46,6 +46,6 @@ class TrainConfig:
 
     #  TẮT CHECKPOINTING ĐỂ MAX TỐC ĐỘ (Vì Batch 3 đủ nhỏ để không OOM)
     # Nếu vẫn bị OOM, hãy sửa thành True
-    gradient_checkpointing: bool = False
+    gradient_checkpointing: bool = True
 
     seed: int = 42
