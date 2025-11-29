@@ -140,7 +140,7 @@ def train():
         warmup_ratio=cfg.warmup_ratio,
         logging_steps=cfg.logging_steps,
 
-        evaluation_strategy=cfg.evaluation_strategy,
+        eval_strategy=cfg.evaluation_strategy,
         eval_steps=cfg.eval_steps,
         save_strategy=cfg.save_strategy,
         save_steps=cfg.save_steps,
@@ -150,14 +150,13 @@ def train():
         bf16=cfg.bf16,
         gradient_checkpointing=cfg.gradient_checkpointing,
 
-        # 🔥 BOOST cho RTX 5090
         optim="adamw_torch_fused",
         tf32=True,
         dataloader_num_workers=8,
         dataloader_pin_memory=True,
 
         report_to="none",
-        remove_unused_columns=False
+        remove_unused_columns=False,
     )
 
     trainer = Trainer(
