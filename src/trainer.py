@@ -21,12 +21,9 @@ def preprocess_function(example, tokenizer, cfg):
     question = example["question"]
     answer = extract_answer(example)
 
-    # 1. Format Full Messages
     messages = format_chat_prompt(context, question, answer)
     full_text = tokenizer.apply_chat_template(messages, tokenize=False)
 
-    # 2. Tokenize Full Text
-    # Tối ưu 2.1: pad_to_multiple_of=8 giúp Tensor Core chạy nhanh hơn
     tokenized = tokenizer(
         full_text,
         truncation=True,
@@ -36,10 +33,7 @@ def preprocess_function(example, tokenizer, cfg):
         add_special_tokens=False,
     )
 
-    # 3. Masking Logic
     messages_prompt_only = format_chat_prompt(context, question, answer=None)
-
-    # Lưu ý: add_generation_prompt=False để khớp chính xác độ dài User input
     prompt_text = tokenizer.apply_chat_template(
         messages_prompt_only,
         tokenize=False,
@@ -56,8 +50,7 @@ def preprocess_function(example, tokenizer, cfg):
     input_ids = tokenized["input_ids"]
     prompt_len = len(prompt_ids)
 
-    # Tối ưu 2.2: Vectorized Masking (Gọn & Nhanh hơn vòng lặp)
-    # Mask nếu token nằm trong vùng Prompt HOẶC là Pad token
+    # Vectorized Masking
     labels = [
         -100 if i < prompt_len or token == tokenizer.pad_token_id else token
         for i, token in enumerate(input_ids)
@@ -74,30 +67,30 @@ def train():
     cfg = TrainConfig()
     set_seed(cfg.seed)
 
-    print(f" Loading tokenizer & model: {cfg.model_name}")
+    print(f"🚀 Loading tokenizer & model: {cfg.model_name}")
     tokenizer = AutoTokenizer.from_pretrained(cfg.model_name)
     tokenizer.pad_token = tokenizer.eos_token
 
-    # Load Model
     model = AutoModelForCausalLM.from_pretrained(
         cfg.model_name,
         torch_dtype=torch.bfloat16 if cfg.bf16 else torch.float16,
         device_map="auto"
     )
 
-    # Tối ưu: Tắt Dropout của model gốc để loss ổn định
+    # Tối ưu hóa Model Config
     model.config.dropout = 0.0
     model.config.attention_dropout = 0.0
 
+    # Xử lý Gradient Checkpointing (Nếu bật)
     if cfg.gradient_checkpointing:
         model.gradient_checkpointing_enable()
         model.config.use_cache = False
+    else:
+        # Nếu tắt checkpointing thì bật cache để inference/eval nhanh hơn chút
+        model.config.use_cache = True
 
-        # Apply LoRA
     if cfg.use_lora:
-        # Handle target_modules an toàn
         target_mod = cfg.target_modules if cfg.target_modules else ["q_proj", "v_proj"]
-
         print(f"⚡ Applying LoRA on: {target_mod}")
         lora_cfg = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -108,18 +101,12 @@ def train():
             target_modules=target_mod
         )
         model = get_peft_model(model, lora_cfg)
-
-        # Tối ưu 2.4: In cấu trúc model để check LoRA đã inject đúng chưa
-        print("\n=== MODEL STRUCTURE AFTER LORA ===")
         model.print_trainable_parameters()
-        print(model)
-        print("==================================\n")
 
-    # Load Data
-    print(f" Loading data from: {cfg.data_path}")
+    print(f"📂 Loading data from: {cfg.data_path}")
     raw_ds = load_viquad(cfg.data_path)
 
-    print(" Processing Train & Validation...")
+    print("🔄 Processing Train & Validation...")
     train_ds = raw_ds["train"].map(
         lambda x: preprocess_function(x, tokenizer, cfg),
         remove_columns=raw_ds["train"].column_names,
@@ -131,21 +118,25 @@ def train():
         desc="Mapping Validation"
     )
 
-    print(" Processing Test set for Loss Eval...")
+    print("🔄 Processing Test set for Loss Eval...")
     test_ds_for_loss = raw_ds["test"].map(
         lambda x: preprocess_function(x, tokenizer, cfg),
         remove_columns=raw_ds["test"].column_names,
         desc="Mapping Test (Loss)"
     )
 
+    # --- TRAINING ARGUMENTS TỐI ƯU CHO RTX 3090 ---
     args = TrainingArguments(
         output_dir=cfg.output_dir,
         num_train_epochs=cfg.num_train_epochs,
         per_device_train_batch_size=cfg.per_device_train_batch_size,
+        per_device_eval_batch_size=cfg.per_device_eval_batch_size,
         gradient_accumulation_steps=cfg.gradient_accumulation_steps,
+
         learning_rate=cfg.learning_rate,
         weight_decay=cfg.weight_decay,
         warmup_ratio=cfg.warmup_ratio,
+
         logging_steps=cfg.logging_steps,
         eval_strategy=cfg.evaluation_strategy,
         eval_steps=cfg.eval_steps,
@@ -153,12 +144,18 @@ def train():
         save_steps=cfg.save_steps,
         save_total_limit=cfg.save_total_limit,
         load_best_model_at_end=cfg.load_best_model_at_end,
+
         bf16=cfg.bf16,
         gradient_checkpointing=cfg.gradient_checkpointing,
+
+        # ⭐ CÁC TỐI ƯU QUAN TRỌNG ⭐
+        dataloader_num_workers=4,  # Dùng 4 nhân CPU nạp data
+        dataloader_pin_memory=True,  # Tăng tốc bắn data vào VRAM
+        tf32=True,  # Bật TensorFloat-32 cho Ampere (RTX 30xx)
+        optim="adamw_torch",  # Optimizer nhanh, nhẹ
+
         report_to="none",
-        remove_unused_columns=False,
-        # Tối ưu 2.3: Dùng AdamW fused của Torch (nhanh hơn)
-        optim="adamw_torch"
+        remove_unused_columns=False
     )
 
     trainer = Trainer(
@@ -167,19 +164,17 @@ def train():
         train_dataset=train_ds,
         eval_dataset=val_ds,
         tokenizer=tokenizer,
-        data_collator=None,  # Đã pad thủ công nên set None
+        data_collator=None,
     )
 
-    print(" Start Training...")
+    print("🔥 Start Training...")
     trainer.train()
 
-    # Tối ưu 2.5: Lưu Adapter riêng biệt rõ ràng
-    print(f" Saving adapter model to {cfg.output_dir}...")
+    print(f"💾 Saving adapter model to {cfg.output_dir}...")
     model.save_pretrained(cfg.output_dir)
     tokenizer.save_pretrained(cfg.output_dir)
 
-    # Evaluate Loss on Test Set
-    print("\n Calculating Test Loss...")
+    print("\n🧐 Calculating Test Loss...")
     test_metrics = trainer.evaluate(eval_dataset=test_ds_for_loss, metric_key_prefix="test")
     print("📊 TEST LOSS RESULT:", json.dumps(test_metrics, indent=4))
 
