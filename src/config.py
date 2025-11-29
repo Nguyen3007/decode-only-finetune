@@ -11,10 +11,10 @@ class TrainConfig:
     max_seq_length: int = 1024
 
     # ====== TRAINING HYPERPARAMS (RTX 3090 OPTIMIZED) ======
-    num_train_epochs: int = 3
+    num_train_epochs: int = 1
 
     per_device_train_batch_size: int = 8
-    per_device_eval_batch_size: int = 3
+    per_device_eval_batch_size: int = 8
 
     gradient_accumulation_steps: int = 4
 
@@ -28,8 +28,7 @@ class TrainConfig:
     lora_alpha: int = 32
     lora_dropout: float = 0.05
     target_modules: List[str] = field(default_factory=lambda: [
-        "q_proj", "k_proj", "v_proj", "o_proj",
-        "gate_proj", "up_proj", "down_proj"
+        "q_proj", "k_proj", "v_proj", "o_proj"
     ])
 
     # ====== LOGGING & SAVING ======
