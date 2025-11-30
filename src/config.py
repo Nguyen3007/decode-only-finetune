@@ -13,11 +13,11 @@ class TrainConfig:
     max_seq_length: int = 1536   # nếu vẫn OOM nữa thì hạ xuống 1536 hoặc 1024
 
     # ====== BATCH SIZE AN TOÀN CHO 32GB ======
-    per_device_train_batch_size: int = 8      # ↓ từ 16/24 xuống 8
-    per_device_eval_batch_size: int = 8
-    gradient_accumulation_steps: int = 2      # Effective batch = 8*4 = 32
+    per_device_train_batch_size: int = 4
+    per_device_eval_batch_size: int = 4
+    gradient_accumulation_steps: int = 8
 
-    num_train_epochs: int = 3
+    num_train_epochs: int = 1
     learning_rate: float = 2e-4
     weight_decay: float = 0.01
     warmup_ratio: float = 0.05
