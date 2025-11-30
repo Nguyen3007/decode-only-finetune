@@ -168,16 +168,16 @@ def train():
         data_collator=None,
     )
 
-    print("🔥 Start Training...")
+    print(" Start Training...")
     trainer.train()
 
-    print(f"💾 Saving adapter model to {cfg.output_dir}...")
+    print(f" Saving adapter model to {cfg.output_dir}...")
     model.save_pretrained(cfg.output_dir)
     tokenizer.save_pretrained(cfg.output_dir)
 
-    print("\n🧐 Calculating Test Loss...")
+    print("\n Calculating Test Loss...")
     test_metrics = trainer.evaluate(eval_dataset=test_ds_for_loss, metric_key_prefix="test")
-    print("📊 TEST LOSS RESULT:", json.dumps(test_metrics, indent=4))
+    print(" TEST LOSS RESULT:", json.dumps(test_metrics, indent=4))
 
     with open(os.path.join(cfg.output_dir, "test_loss_results.json"), "w") as f:
         json.dump(test_metrics, f, indent=4)

@@ -41,5 +41,5 @@ class TrainConfig:
 
     # BẬT LẠI checkpointing để tiết kiệm VRAM
     bf16: bool = True
-    gradient_checkpointing: bool = True
+    gradient_checkpointing: bool = False
     seed: int = 42
